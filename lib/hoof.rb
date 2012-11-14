@@ -1,6 +1,7 @@
 require 'eventmachine'
 require 'unicorn/launcher'
 require 'evma_httpserver'
+require 'erb'
 
 require 'hoof/http_server'
 require 'hoof/https_server'
@@ -28,8 +29,9 @@ module Hoof
      trap("TERM") { stop }
      trap("INT")  { stop }
 
-     EventMachine::start_server "127.0.0.1", http_port, Hoof::HttpServer
-     EventMachine::start_server "127.0.0.1", https_port, Hoof::HttpsServer
+     #default: EventMachine::start_server "127.0.0.1", http_port, Hoof::HttpServer
+     EventMachine::start_server "0.0.0.0", http_port, Hoof::HttpServer
+     EventMachine::start_server "0.0.0.0", https_port, Hoof::HttpsServer
      EventMachine::start_server sock, Hoof::ControlServer
    end
   end

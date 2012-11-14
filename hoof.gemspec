@@ -5,14 +5,14 @@
 
 Gem::Specification.new do |s|
   s.name = %q{hoof}
-  s.version = "0.0.7"
+  s.version = "0.0.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["pyromaniac"]
-  s.date = %q{2011-06-08}
+  s.authors = ["pyromaniac","berga"]
+  s.date = %q{2012-11-14}
   s.default_executable = %q{hoof}
   s.description = %q{Hoof is linux variant of pow. It's based on nss, eventmachine and unicorn}
-  s.email = %q{kinwizard@gmail.com}
+  s.email = %q{airberga@gmail.com}
   s.executables = ["hoof"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
@@ -39,6 +39,7 @@ Gem::Specification.new do |s|
     "lib/hoof/http_server.rb",
     "lib/hoof/https_server.rb",
     "lib/hoof/unicorn_config.rb",
+    "lib/templates/not_found.erb",
     "test/helper.rb",
     "test/test_hoof.rb"
   ]

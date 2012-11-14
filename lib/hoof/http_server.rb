@@ -17,10 +17,10 @@ module Hoof
       p 'DATA'
       p @buffer
       begin
-        host = @http_headers.scan(/Host:\s*([-a-zA-z.]*)\000/)[0][0].gsub(/:\d+$/, '')
-        close_connection and return unless host =~ /.dev$/
+        host,port = @http_headers.scan(/Host:\s*([-a-zA-z\.\d]*):?(\d+)?\000/).flatten #[0][0].gsub(/:\d+$/, '')
+        close_connection and return unless host =~ /.((dev)|(xip\.io))$/
 
-        name = host.split('.')[-2]
+        name = host.gsub(/\.((dev)|(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\.xip\.io))$/, '')
         application = Hoof.find name
 
         if application
@@ -39,11 +39,22 @@ module Hoof
             })
           end
         else
+          if name
+            renderer = ERB.new(File.read(File.join(File.dirname(__FILE__),"..","templates","not_found.html.erb")))
+            @title = "Application not found<br/>\"#{name}\""
+            puts @title
+            @application = application
+            @host = host
+            @port = port
+            send_data renderer.result(binding)
+            close_connection_after_writing
+            return
+          end
           close_connection
         end
       rescue => e
         puts e.message
-        puts e.backtrace.join("\n")
+        puts e.backtrace[0..10].join("\n")
         close_connection
       end
     end

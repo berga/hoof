@@ -1,30 +1,38 @@
 module Hoof
   class Application
-    attr_accessor :root, :app, :name
+    attr_accessor :root, :app, :name, :mtime, :tmp_restart
 
     def initialize name
       @name = name
       @root = File.readlink(File.expand_path(File.join("~/.hoof/", name)))
+      @tmp_restart = File.join(@root,"tmp","restart.txt")
+      @mtime = File.stat(tmp_restart).mtime if File.exists?(tmp_restart)
+      puts "original mtime:#{@mtime}"
     end
 
     def start
+
+      if running? && need_reload?
+        puts "stopping Application..."
+        stop
+        sleep(1) if running?
+        sleep(2) if running?
+        sleep(3) if running?
+        puts "Application stopped?...#{!running?}"
+      end
+
       unless running?
-        rvmrc = ""
-        if File.exists?(root + '/.rvmrc')
-          rvmrc = File.read(root + '/.rvmrc').chomp
-          rvmrc << " exec "
-        else
-          load_rvm
-        end
-        system "cd #{root} && #{rvmrc}bundle exec unicorn_rails -c #{File.join(File.dirname(__FILE__), 'unicorn_config.rb')} -l #{sock} -D"
+        puts "starting Application... running?: #{running?}"
+        load_rvm
+        system "cd #{root} && bundle exec unicorn_rails -c #{File.join(File.dirname(__FILE__), 'unicorn_config.rb')} -l #{sock} -D"
       end
     end
 
     def load_rvm
       if ENV['MY_RUBY_HOME'] && ENV['MY_RUBY_HOME'].include?('rvm')
-        rvm_path     = File.dirname(File.dirname(ENV['MY_RUBY_HOME']))
-        rvm_lib_path = File.join(rvm_path, 'lib')
-        $LOAD_PATH.unshift rvm_lib_path
+        #rvm_path     = File.dirname(File.dirname(ENV['MY_RUBY_HOME']))
+        #rvm_lib_path = File.join(rvm_path, 'lib')
+        #$LOAD_PATH.unshift rvm_lib_path
         require 'rvm'
 
         RVM.use_from_path! root
@@ -37,6 +45,17 @@ module Hoof
 
     def stop
       Process.kill 'TERM', pid if running?
+    end
+
+    def need_reload?
+      if File.exists?(tmp_restart)
+        new_mtime = File.stat(tmp_restart).mtime
+        if new_mtime != mtime
+          @mtime = new_mtime
+          return true
+        end
+      end
+      false
     end
 
     def static_file? path
